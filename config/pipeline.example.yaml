@@ -1,0 +1,25 @@
+# Example pipeline configuration.
+#
+# Everything here is optional — an empty file would still run with defaults.
+# The maps below fix the deliberate quirks the synthetic generator introduces
+# in the legacy first wave, demonstrating wave-agnostic ingest.
+
+harmonise:
+  # Old column name -> canonical column name.
+  rename:
+    nps: nps_score
+  # Old region code -> canonical region label.
+  region:
+    N: North
+    S: South
+    E: East
+    W: West
+
+# Dimensions to break metrics down by, alongside `wave`.
+segment_cols: [region]
+
+# Metric thresholds (these are the standard NPS / top-2-box definitions).
+metrics:
+  promoter_min: 9      # NPS 9-10 = promoter
+  detractor_max: 6     # NPS 0-6  = detractor
+  top2box_min: 4       # satisfaction 4-5 = top-2-box

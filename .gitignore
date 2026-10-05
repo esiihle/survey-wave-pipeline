@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.venv/
+venv/
+
+# Spark / local run artifacts
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
+_SUCCESS
+
+# Generated data and pipeline output (synthetic — regenerate with the script)
+data/raw/
+data/out/
+*.parquet
+
+# Keep the data folder present
+!data/.gitkeep
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

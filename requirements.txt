@@ -1,0 +1,4 @@
+pyspark>=3.5
+PyYAML>=6.0
+# For the synthetic data generator and tests:
+pandas>=2.0
