@@ -10,6 +10,7 @@ nothing proprietary. It mirrors the shape of a production tracker pipeline
 (the kind you'd run on Spark in a lakehouse) with the environment stripped out,
 so anyone can clone it and run the whole thing in a couple of minutes.
 
+[![CI](https://github.com/esiihle/survey-wave-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/esiihle/survey-wave-pipeline/actions/workflows/ci.yml)
 ![python](https://img.shields.io/badge/python-3.10+-blue) ![pyspark](https://img.shields.io/badge/PySpark-3.5+-orange) ![license](https://img.shields.io/badge/license-MIT-green) ![tests](https://img.shields.io/badge/tests-pytest-blue)
 
 ## What problem it solves
