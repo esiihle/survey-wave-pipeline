@@ -19,6 +19,7 @@ def get_spark(
     app_name: str = "survey-wave-pipeline",
     shuffle_partitions: int = 8,
     master: str = "local[*]",
+    delta: bool = False,
 ) -> SparkSession:
     """Build (or fetch) a tuned local SparkSession.
 
@@ -27,8 +28,12 @@ def get_spark(
         shuffle_partitions: Partitions for shuffles. The default 200 is far too
             many for laptop-scale data; a small number keeps jobs snappy.
         master: Spark master URL. ``local[*]`` uses all cores.
+        delta: When True, enable Delta Lake — registers the Delta SQL
+            extensions/catalog and pulls the matching Delta JARs from Maven on
+            first start (needs network the first time). Required for the
+            ``delta`` output format; leave False for plain parquet.
     """
-    spark = (
+    builder = (
         SparkSession.builder.appName(app_name)
         .master(master)
         .config("spark.sql.shuffle.partitions", str(shuffle_partitions))
@@ -38,8 +43,24 @@ def get_spark(
         .config("spark.ui.enabled", "false")
         # Quieter, faster startup for small local jobs.
         .config("spark.sql.adaptive.enabled", "true")
-        .getOrCreate()
     )
+
+    if delta:
+        # Register Delta's Catalyst extensions + catalog, and let delta-spark
+        # add the correct Maven coordinate for the running Spark version.
+        from delta import configure_spark_with_delta_pip
+
+        builder = (
+            builder
+            .config("spark.sql.extensions",
+                    "io.delta.sql.DeltaSparkSessionExtension")
+            .config("spark.sql.catalog.spark_catalog",
+                    "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+        )
+        spark = configure_spark_with_delta_pip(builder).getOrCreate()
+    else:
+        spark = builder.getOrCreate()
+
     spark.sparkContext.setLogLevel("ERROR")
     return spark
 
