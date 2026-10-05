@@ -5,6 +5,9 @@
 
     # Later, after new wave files land: process only the new waves
     wave-pipeline run -i data/raw -o data/out -c config/pipeline.example.yaml --incremental
+
+    # Write a Delta Lake table instead (respondents upserted by MERGE)
+    wave-pipeline run -i data/raw -o data/out -c config/pipeline.example.yaml --format delta
 """
 
 from __future__ import annotations
@@ -27,9 +30,10 @@ def _configure_logging(verbose: bool, quiet: bool) -> None:
 
 def _cmd_run(args: argparse.Namespace) -> int:
     config = load_config(args.config)
-    with spark_session(app_name="wave-pipeline") as spark:
+    use_delta = args.format == "delta"
+    with spark_session(app_name="wave-pipeline", delta=use_delta) as spark:
         summary = run(spark, config, args.input, args.output,
-                      incremental=args.incremental)
+                      incremental=args.incremental, output_format=args.format)
     if not summary.waves_processed:
         log.info("Nothing to do — no new waves to process.")
     else:
@@ -54,6 +58,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("-c", "--config", required=True, help="pipeline config YAML")
     p.add_argument("--incremental", action="store_true",
                    help="process only waves not already in the output")
+    p.add_argument("--format", choices=["parquet", "delta"], default="parquet",
+                   help="output format: parquet (default) or delta (MERGE upserts)")
     p.add_argument("-v", "--verbose", action="store_true", help="debug logging")
     p.add_argument("-q", "--quiet", action="store_true", help="warnings only")
     p.set_defaults(func=_cmd_run)

@@ -20,11 +20,15 @@ from dataclasses import dataclass
 
 from pyspark.sql import SparkSession
 
+from . import io_delta
 from .aggregate import wave_metrics
 from .config import PipelineConfig
 from .ingest import ingest_waves
 from .io import existing_waves, read_parquet, write_partitioned
 from .transform import add_features
+
+# Merge key for the respondent store (unique per respondent per wave).
+RESPONDENT_KEYS = ["wave", "respondent_id"]
 
 
 @dataclass
@@ -52,19 +56,37 @@ def run(
     input_dir: str,
     output_dir: str,
     incremental: bool = False,
+    output_format: str = "parquet",
 ) -> RunSummary:
-    """Run the pipeline. See module docstring for the two modes."""
+    """Run the pipeline. See module docstring for the two modes.
+
+    Args:
+        output_format: ``"parquet"`` (default) writes a partitioned parquet
+            store with dynamic partition overwrite; ``"delta"`` writes a Delta
+            table and upserts respondents by key with MERGE (ACID, time travel).
+            Both are idempotent; delta is finer-grained. Rejects are always
+            written as a small parquet diagnostic side-output.
+    """
+    if output_format not in ("parquet", "delta"):
+        raise ValueError("output_format must be 'parquet' or 'delta'")
+    use_delta = output_format == "delta"
     resp_path, metrics_path, reject_path = _paths(output_dir)
 
     clean_all, rejects_all = ingest_waves(spark, input_dir, config)
     available = sorted(int(r["wave"]) for r in clean_all.select("wave").distinct().collect())
 
-    done = existing_waves(spark, resp_path) if incremental else []
+    # Which waves are already stored (depends on the output format).
+    if incremental:
+        done = (io_delta.existing_waves_delta(spark, resp_path) if use_delta
+                else existing_waves(spark, resp_path))
+    else:
+        done = []
     to_process = [w for w in available if w not in done]
 
     if not to_process:
         # Nothing new — a no-op run. Report the current metric count.
-        metric_rows = read_parquet(spark, metrics_path).count() if os.path.exists(metrics_path) else 0
+        reader = io_delta.read_delta if use_delta else read_parquet
+        metric_rows = reader(spark, metrics_path).count() if os.path.exists(metrics_path) else 0
         return RunSummary("incremental", [], 0, 0, metric_rows)
 
     clean_new = clean_all.filter(clean_all.wave.isin(to_process))
@@ -72,17 +94,25 @@ def run(
 
     features = add_features(clean_new, config)
 
-    # Respondent store: dynamic overwrite writes only the new wave partitions,
-    # so an incremental run leaves existing waves untouched (and a repeat run of
-    # the same wave simply replaces its partition — idempotent).
-    write_partitioned(features, resp_path, "wave", mode="overwrite")
+    # Respondent store. Both paths are idempotent:
+    #  - parquet: dynamic overwrite replaces only the new wave partitions.
+    #  - delta:   MERGE upserts by (wave, respondent_id) — updates changed rows,
+    #             inserts new ones, atomically, and records a new table version.
+    if use_delta:
+        io_delta.upsert_delta(spark, features, resp_path, RESPONDENT_KEYS, "wave")
+    else:
+        write_partitioned(features, resp_path, "wave", mode="overwrite")
+
     if rejects_new.take(1):
         write_partitioned(rejects_new, reject_path, "wave", mode="overwrite")
 
     # Metrics recomputed over the *full* respondent store so deltas are correct.
-    all_respondents = read_parquet(spark, resp_path)
+    all_respondents = io_delta.read_delta(spark, resp_path) if use_delta else read_parquet(spark, resp_path)
     metrics = wave_metrics(all_respondents, config)
-    metrics.write.mode("overwrite").parquet(metrics_path)
+    if use_delta:
+        io_delta.overwrite_delta(metrics, metrics_path)
+    else:
+        metrics.write.mode("overwrite").parquet(metrics_path)
 
     return RunSummary(
         mode="incremental" if incremental else "full",
