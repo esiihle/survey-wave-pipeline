@@ -4,20 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "wave-pipeline"
-version = "0.1.0"
+version = "0.2.0"
 description = "Wave-agnostic PySpark survey tracker pipeline (synthetic-data showcase)."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 keywords = ["pyspark", "spark", "data-engineering", "survey", "market-research", "etl"]
 dependencies = [
-    "pyspark>=3.5",
+    "pyspark>=3.5,<3.6",
     "PyYAML>=6.0",
 ]
 
 [project.optional-dependencies]
 synthetic = ["pandas>=2.0"]
-dev = ["pytest>=8.0", "pandas>=2.0"]
+delta = ["delta-spark>=3.3,<3.4"]
+dev = ["pytest>=8.0", "pandas>=2.0", "delta-spark>=3.3,<3.4"]
 
 [project.scripts]
 wave-pipeline = "wave_pipeline.cli:main"

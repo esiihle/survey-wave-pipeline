@@ -36,3 +36,4 @@ jobs:
           python scripts/generate_synthetic_waves.py --waves 3 --rows 150 --seed 1 --dirty --out data/raw
           wave-pipeline run -i data/raw -o data/out -c config/pipeline.example.yaml
           wave-pipeline run -i data/raw -o data/out -c config/pipeline.example.yaml --incremental
+          wave-pipeline run -i data/raw -o data/out_delta -c config/pipeline.example.yaml --format delta

@@ -25,12 +25,18 @@ from .config import ConfigError, PipelineConfig, load_config
 from .harmonise import harmonise
 from .ingest import discover_wave_files, ingest_waves
 from .io import existing_waves, read_parquet, write_partitioned
+from .io_delta import (
+    existing_waves_delta,
+    read_delta,
+    upsert_delta,
+    version_count,
+)
 from .pipeline import RunSummary, run
 from .schema import CANONICAL_COLUMNS, CANONICAL_SCHEMA, enforce_schema
 from .spark import get_spark, spark_session
 from .transform import add_features
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
     "get_spark",
@@ -49,6 +55,10 @@ __all__ = [
     "write_partitioned",
     "read_parquet",
     "existing_waves",
+    "upsert_delta",
+    "read_delta",
+    "existing_waves_delta",
+    "version_count",
     "run",
     "RunSummary",
     "__version__",

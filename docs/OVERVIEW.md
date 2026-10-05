@@ -61,9 +61,15 @@ arrive with legacy column names or region codes; harmonisation fixes those.
   modules operating on synthetic Spark DataFrames instead.
 - No cloud paths, connection strings, or environment metadata anywhere.
 
+## Shipped since 0.1.0
+
+See [CHANGELOG.md](../CHANGELOG.md). In brief, 0.2.0 added a **Delta Lake**
+output mode (`--format delta`): respondents are upserted by key with an atomic
+`MERGE` (finer-grained than partition overwrite), and every run is a new table
+version, giving history and time travel.
+
 ## Possible extensions
 
-- Delta Lake output with time travel and `MERGE`-based upserts.
 - Great Expectations / `pydeequ` style data-quality assertions alongside the
   built-in schema enforcement.
 - Significance testing on wave-over-wave deltas.
