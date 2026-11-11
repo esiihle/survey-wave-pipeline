@@ -3,7 +3,7 @@
 One Spark session is built for the whole test session (startup is the slow
 part), tuned tiny so jobs finish fast.
 
-The session is **Delta-enabled when possible**. Delta needs JARs pulled from
+The session is Delta-enabled when possible. Delta needs JARs pulled from
 Maven on first use; where that network isn't available (e.g. an offline
 sandbox), we fall back to a plain session and the Delta tests skip themselves
 via the ``delta_available`` fixture. CI and a normal laptop have the network,

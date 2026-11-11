@@ -6,7 +6,7 @@ from wave_pipeline.schema import CANONICAL_COLUMNS, enforce_schema
 
 
 def _raw(spark):
-    # Rows as strings (as they'd arrive from CSV). Deliberately omits
+    # Rows as strings (as they'd arrive from CSV). Leaves out
     # brand_used / fieldwork_date to test missing-column fill, and includes
     # bad rows for each range rule.
     cols = ["respondent_id", "wave", "region", "age_group", "weight",

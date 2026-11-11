@@ -1,10 +1,10 @@
-"""Harmonisation — making every wave speak the same language.
+"""Harmonisation: make every wave speak the same language.
 
-This is the "wave-agnostic" heart of the pipeline. Different waves of the same
+This is the "wave-agnostic" part of the pipeline. Different waves of the same
 tracker often arrive with cosmetic differences: an early wave calls the metric
 ``nps`` where later waves call it ``nps_score``; one fieldwork house codes
 region as ``N``/``S`` where another spells out ``North``/``South``. The business
-meaning is identical — only the surface form differs.
+meaning is the same; only the surface form differs.
 
 Harmonisation applies config-driven maps so that, after this step, every wave
 looks the same and the rest of the pipeline never needs to know which wave a

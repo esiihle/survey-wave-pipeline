@@ -1,13 +1,13 @@
-"""Delta Lake I/O — ACID upserts via MERGE, with time travel.
+"""Delta Lake I/O: ACID upserts via MERGE, with time travel.
 
-The parquet path (:mod:`wave_pipeline.io`) gets idempotency from *dynamic
-partition overwrite* — it replaces a whole wave partition. Delta goes finer and
-safer: it upserts **by key** with a single atomic ``MERGE``, so reprocessing a
+The parquet path (:mod:`wave_pipeline.io`) gets its idempotency from dynamic
+partition overwrite, which replaces a whole wave partition. Delta is finer and
+safer: it upserts by key with a single atomic ``MERGE``, so reprocessing a
 wave updates the rows that changed and inserts the new ones, without rewriting
 untouched rows and without any window where the table is half-written. Every
-run is a new table *version*, so you also get history / time travel for free.
+run is a new table version, so you get history and time travel as well.
 
-Merge key for the respondent store: ``(wave, respondent_id)`` — unique per
+Merge key for the respondent store is ``(wave, respondent_id)``, unique per
 respondent per wave.
 
 Delta needs its JARs (pulled from Maven on first use) and a Delta-enabled
@@ -39,7 +39,7 @@ def upsert_delta(
 
     Creates the table on first write (partitioned by ``partition_col``);
     thereafter runs an atomic MERGE: matched rows are updated, new rows are
-    inserted. Re-running with identical data is a no-op in effect — idempotent.
+    inserted. Re-running with identical data has no effect, so it is idempotent.
     """
     from delta.tables import DeltaTable
 
@@ -83,7 +83,7 @@ def existing_waves_delta(spark: SparkSession, path: str) -> list[int]:
 
 
 def version_count(spark: SparkSession, path: str) -> int:
-    """Number of committed versions (table history length) — proof of time travel."""
+    """Number of committed versions (table history length), which shows time travel works."""
     from delta.tables import DeltaTable
 
     if not DeltaTable.isDeltaTable(spark, path):

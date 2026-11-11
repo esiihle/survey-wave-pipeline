@@ -1,16 +1,16 @@
-"""Pipeline orchestration — tie the stages together, full or incremental.
+"""Pipeline orchestration: tie the stages together, full or incremental.
 
 Flow: ingest -> harmonise -> enforce schema -> add features -> write respondent
 store (partitioned by wave) -> recompute metrics over the full store.
 
 Two modes:
 
-* **full** - process every wave file, overwrite the whole output.
-* **incremental** - process only waves not already in the respondent store and
-  dynamic-overwrite just those partitions (idempotent: re-running changes
-  nothing). Metrics are recomputed over the full store each time, because a
-  wave-over-wave delta depends on the neighbouring wave — the metrics table is
-  tiny, so this is cheap and always correct.
+* full: process every wave file, overwrite the whole output.
+* incremental: process only waves not already in the respondent store and
+  dynamic-overwrite just those partitions (re-running changes nothing).
+  Metrics are recomputed over the full store each time, because a
+  wave-over-wave delta depends on the neighbouring wave. The metrics table is
+  tiny, so recomputing it is cheap and always correct.
 """
 
 from __future__ import annotations
@@ -33,7 +33,7 @@ RESPONDENT_KEYS = ["wave", "respondent_id"]
 
 @dataclass
 class RunSummary:
-    """What a run did — handy for logging and for asserting in tests."""
+    """What a run did. Handy for logging and for asserting in tests."""
 
     mode: str
     waves_processed: list[int]
@@ -84,7 +84,7 @@ def run(
     to_process = [w for w in available if w not in done]
 
     if not to_process:
-        # Nothing new — a no-op run. Report the current metric count.
+        # Nothing new, so this run is a no-op. Report the current metric count.
         reader = io_delta.read_delta if use_delta else read_parquet
         metric_rows = reader(spark, metrics_path).count() if os.path.exists(metrics_path) else 0
         return RunSummary("incremental", [], 0, 0, metric_rows)
@@ -96,7 +96,7 @@ def run(
 
     # Respondent store. Both paths are idempotent:
     #  - parquet: dynamic overwrite replaces only the new wave partitions.
-    #  - delta:   MERGE upserts by (wave, respondent_id) — updates changed rows,
+    #  - delta:   MERGE upserts by (wave, respondent_id): updates changed rows,
     #             inserts new ones, atomically, and records a new table version.
     if use_delta:
         io_delta.upsert_delta(spark, features, resp_path, RESPONDENT_KEYS, "wave")
@@ -106,7 +106,7 @@ def run(
     if rejects_new.take(1):
         write_partitioned(rejects_new, reject_path, "wave", mode="overwrite")
 
-    # Metrics recomputed over the *full* respondent store so deltas are correct.
+    # Metrics recomputed over the full respondent store so deltas are correct.
     all_respondents = io_delta.read_delta(spark, resp_path) if use_delta else read_parquet(spark, resp_path)
     metrics = wave_metrics(all_respondents, config)
     if use_delta:

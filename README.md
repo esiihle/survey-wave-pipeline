@@ -1,12 +1,12 @@
 # survey-wave-pipeline
 
-A **wave-agnostic PySpark pipeline** for survey tracker data;  ingest any number
-of survey waves, harmonise their quirks to one canonical schema, enforce a data
-contract, derive weighted metrics with window functions, and write an
-idempotent, partitioned output that supports incremental runs.
+A **wave-agnostic PySpark pipeline** for survey tracker data. It ingests any
+number of survey waves, harmonises their quirks to one canonical schema,
+enforces a data contract, derives weighted metrics with window functions, and
+writes an idempotent, partitioned output that supports incremental runs.
 
-Everything runs **locally on synthetic data**; no cluster, no cloud workspace,
-nothing proprietary. It mirrors the shape of a production tracker pipeline
+Everything runs **locally on synthetic data**: no cluster, no cloud workspace,
+nothing proprietary. It has the same shape as a production tracker pipeline
 (the kind you'd run on Spark in a lakehouse) with the environment stripped out,
 so anyone can clone it and run the whole thing in a couple of minutes.
 
@@ -15,7 +15,7 @@ so anyone can clone it and run the whole thing in a couple of minutes.
 
 ## What problem it solves
 
-A tracker is the *same* survey run repeatedly over time ("waves"). The recurring
+A tracker is the same survey run repeatedly over time ("waves"). The recurring
 data-engineering headaches are always the same:
 
 - **Waves drift.** An early wave calls a column `nps`; later ones call it
@@ -31,19 +31,19 @@ This pipeline handles all four, the same way for 2 waves or 50.
 
 | Area | Where |
 | --- | --- |
-| **Schema enforcement / data contracts** | `schema.py` — cast to a canonical `StructType`, quarantine bad rows with reasons |
-| **Harmonisation across sources** | `harmonise.py` — config-driven column renames + value recodes |
-| **Window functions** | `transform.py` — weight normalised *within wave*; `aggregate.py` — `lag` for wave-over-wave delta, `dense_rank` for segment ranking |
-| **Weighted aggregation** | `aggregate.py` — weighted NPS, top-2-box, awareness over the answering base |
-| **Partitioning** | `io.py` — parquet partitioned by `wave` for pruning |
-| **Incremental & idempotent processing** | `pipeline.py` + `io.py` — dynamic partition overwrite; re-runs change nothing |
-| **Delta Lake (ACID / MERGE / time travel)** | `io_delta.py` — `--format delta` upserts respondents by key with `MERGE`; every run is a new, queryable table version |
-| **Testing Spark code** | `tests/` — session-scoped fixture, unit + end-to-end tests (incl. Delta) |
+| **Schema enforcement / data contracts** | `schema.py`: cast to a canonical `StructType`, quarantine bad rows with reasons |
+| **Harmonisation across sources** | `harmonise.py`: config-driven column renames and value recodes |
+| **Window functions** | `transform.py`: weight normalised within wave; `aggregate.py`: `lag` for wave-over-wave delta, `dense_rank` for segment ranking |
+| **Weighted aggregation** | `aggregate.py`: weighted NPS, top-2-box, awareness over the answering base |
+| **Partitioning** | `io.py`: parquet partitioned by `wave` for pruning |
+| **Incremental & idempotent processing** | `pipeline.py` + `io.py`: dynamic partition overwrite; re-runs change nothing |
+| **Delta Lake (ACID / MERGE / time travel)** | `io_delta.py`: `--format delta` upserts respondents by key with `MERGE`; every run is a new, queryable table version |
+| **Testing Spark code** | `tests/`: session-scoped fixture, unit and end-to-end tests (incl. Delta) |
 
 ## Quickstart
 
 ```bash
-# 1. Install (PySpark needs a JVM — Java 17+ — on your machine)
+# 1. Install (PySpark needs a JVM, Java 17+, on your machine)
 pip install -e ".[dev]"
 
 # 2. Generate four synthetic waves
@@ -70,7 +70,7 @@ Later, when new wave files land, process only the new ones:
 wave-pipeline run -i data/raw -o data/out -c config/pipeline.example.yaml --incremental
 ```
 
-Or run the whole thing (generate → run → print metrics) in one go:
+Or run the whole thing (generate, run, print metrics) in one go:
 
 ```bash
 python examples/example_run.py
@@ -102,34 +102,34 @@ spark.read.format("delta").option("versionAsOf", 0).load("data/out/respondents")
 ## How it works
 
 ```
-raw wave CSVs ──► harmonise ──► enforce schema ──► add features ──► write respondents
- (any number)     (rename/recode)  (cast + quarantine)  (window fns)    (parquet, by wave)
-                                                                              │
-                                                              recompute metrics over full store
-                                                                              ▼
-                                                                   metrics (wave × segment)
+raw wave CSVs  ->  harmonise      ->  enforce schema     ->  add features  ->  write respondents
+ (any number)      (rename/recode)    (cast + quarantine)    (window fns)      (parquet, by wave)
+                                                                                     |
+                                                            recompute metrics over the full store
+                                                                                     v
+                                                                   metrics (per wave and segment)
 ```
 
-1. **Ingest** every `*.csv` in the input folder — no per-wave code.
+1. **Ingest** every `*.csv` in the input folder, with no per-wave code.
 2. **Harmonise** wave-specific names and codes to canonical form (config-driven).
 3. **Enforce schema**: cast to the canonical types; rows that violate the
    contract (bad range, missing key) are written to a separate `rejects/` set
-   with a reason; never dropped silently.
+   with a reason, never dropped silently.
 4. **Add features** with window functions: weight normalised within each wave,
    NPS segment, top-2-box flag.
 5. **Write respondents** partitioned by `wave`.
-6. **Aggregate** to weighted metrics per wave × segment, with wave-over-wave
+6. **Aggregate** to weighted metrics per wave and segment, with wave-over-wave
    `nps_delta` and a within-wave `nps_rank`.
 
 **Incremental & idempotent:** an incremental run processes only waves not
 already in the output and dynamic-overwrites just those partitions. Running the
-same wave again replaces its partition rather than appending; so re-runs are
+same wave again replaces its partition rather than appending, so re-runs are
 safe and produce identical output. Metrics are recomputed over the full store
 each run (it's tiny) so the wave-over-wave deltas are always correct.
 
 ## Configuration
 
-`config/pipeline.example.yaml` — everything is optional with sensible defaults:
+`config/pipeline.example.yaml`, where everything is optional with sensible defaults:
 
 ```yaml
 harmonise:
@@ -149,8 +149,8 @@ metrics:
 
 | Path | Contents |
 | --- | --- |
-| `data/out/respondents/` | Respondent-level rows with derived features — partitioned parquet (`wave=*/`), or a Delta table upserted by key with `--format delta` |
-| `data/out/metrics/` | Weighted metrics per wave × segment: `nps`, `nps_delta`, `top2box_pct`, `awareness_pct`, `nps_rank_in_wave` |
+| `data/out/respondents/` | Respondent-level rows with derived features: partitioned parquet (`wave=*/`), or a Delta table upserted by key with `--format delta` |
+| `data/out/metrics/` | Weighted metrics per wave and segment: `nps`, `nps_delta`, `top2box_pct`, `awareness_pct`, `nps_rank_in_wave` |
 | `data/out/rejects/wave=*/` | Rows that failed the data contract, with a `reject_reason` |
 
 ## Project structure
@@ -166,7 +166,7 @@ survey-wave-pipeline/
 │   ├── transform.py     # respondent features (within-wave window fns)
 │   ├── aggregate.py     # weighted metrics + wave-over-wave delta + rank
 │   ├── io.py            # partitioned, idempotent parquet I/O
-│   ├── io_delta.py      # Delta Lake I/O — MERGE upserts, time travel
+│   ├── io_delta.py      # Delta Lake I/O: MERGE upserts, time travel
 │   ├── pipeline.py      # orchestration: full & incremental runs
 │   └── cli.py           # command-line interface
 ├── scripts/
@@ -185,16 +185,16 @@ pytest -q
 
 Tests build one small local Spark session and cover schema enforcement,
 harmonisation, window-function transforms, weighted metrics/deltas, and an
-end-to-end full → incremental → idempotency check.
+end-to-end full, incremental, then idempotency check.
 
 ## A note on the clean-room approach
 
 This is a from-scratch reimplementation against **synthetic** data generated by
 `scripts/generate_synthetic_waves.py`. It carries no real respondents, brands,
-or client content, and deliberately no notebook, no workspace/lakehouse
-identifiers, and no environment paths. The engineering is the point; the
-environment it might otherwise run in is not part of the repo.
+or client content, and no notebook, no workspace/lakehouse identifiers, and no
+environment paths. The engineering is the point; the environment it might
+otherwise run in is not part of the repo.
 
 ## License
 
-MIT  see [LICENSE](LICENSE).
+MIT. See [LICENSE](LICENSE).

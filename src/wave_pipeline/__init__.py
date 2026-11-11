@@ -1,12 +1,12 @@
-"""wave_pipeline — a wave-agnostic PySpark survey tracker pipeline.
+"""wave_pipeline: a wave-agnostic PySpark survey tracker pipeline.
 
-A clean-room showcase of survey data-engineering in Spark: ingest any number of
-survey waves, harmonise their quirks to one canonical schema, enforce a data
-contract (quarantining bad rows), derive weighted metrics with window
-functions, and write an idempotent, partitioned output that supports
-incremental runs.
+A clean-room version of the survey data-engineering I do in Spark. It ingests
+any number of survey waves, harmonises their quirks to one canonical schema,
+enforces a data contract (bad rows get quarantined rather than dropped),
+derives weighted metrics with window functions, and writes an idempotent,
+partitioned output that supports incremental runs.
 
-Everything runs locally against synthetic data — no cluster, no cloud, nothing
+Everything runs locally against synthetic data. No cluster, no cloud, nothing
 proprietary.
 
 Public API::

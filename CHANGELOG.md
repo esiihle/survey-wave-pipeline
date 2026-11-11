@@ -9,8 +9,9 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - **Delta Lake output** (`--format delta`). Respondents are upserted by key
   (`wave`, `respondent_id`) in a single atomic `MERGE` instead of by partition
-  replacement — finer-grained and with no half-written state. Every run commits
-  a new table version, giving history and time travel. New `io_delta` module
+  replacement, which is finer-grained and leaves no half-written state. Every
+  run commits a new table version, giving history and time travel. New
+  `io_delta` module
   (`upsert_delta`, `read_delta`, `existing_waves_delta`, `version_count`) and a
   Delta-enabled session via `get_spark(delta=True)`.
 - `delta` optional extra (`pip install '.[delta]'`, delta-spark 3.3).
@@ -29,9 +30,9 @@ All notable changes to this project are documented here. The format follows
   - Config-driven cross-wave harmonisation of column names and region codes
     (`harmonise.py`).
   - Wave-agnostic ingest of any number of wave CSVs (`ingest.py`).
-  - Respondent features via window functions — weight normalised within wave,
+  - Respondent features via window functions: weight normalised within wave,
     NPS segment, top-2-box (`transform.py`).
-  - Weighted wave × segment metrics with wave-over-wave `nps_delta` (`lag`) and
+  - Weighted per-wave-and-segment metrics with wave-over-wave `nps_delta` (`lag`) and
     within-wave `nps_rank` (`dense_rank`) (`aggregate.py`).
   - Partitioned, idempotent parquet I/O and incremental runs via dynamic
     partition overwrite (`io.py`, `pipeline.py`).

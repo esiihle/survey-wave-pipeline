@@ -1,9 +1,9 @@
 """Spark session management.
 
 A single place to build a SparkSession so every entry point (CLI, tests,
-examples) gets the same tuned, *local* configuration. Nothing here depends on
-a cluster or a cloud workspace — the whole pipeline runs on your laptop against
-synthetic data, which is exactly the point: the transformation logic mirrors a
+examples) gets the same tuned, local configuration. Nothing here depends on
+a cluster or a cloud workspace. The whole pipeline runs on your laptop against
+synthetic data, which is the point: the transformation logic matches a
 production wave pipeline, minus any environment it was tied to.
 """
 
@@ -28,7 +28,7 @@ def get_spark(
         shuffle_partitions: Partitions for shuffles. The default 200 is far too
             many for laptop-scale data; a small number keeps jobs snappy.
         master: Spark master URL. ``local[*]`` uses all cores.
-        delta: When True, enable Delta Lake — registers the Delta SQL
+        delta: When True, enable Delta Lake. Registers the Delta SQL
             extensions/catalog and pulls the matching Delta JARs from Maven on
             first start (needs network the first time). Required for the
             ``delta`` output format; leave False for plain parquet.

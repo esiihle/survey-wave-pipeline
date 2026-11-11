@@ -2,8 +2,8 @@
 
 A survey tracker runs the same study repeatedly ("waves"). Over time, wave
 files drift: a column gets renamed, a type arrives as text instead of a number,
-an out-of-range value slips in. The pipeline pins a single *canonical* schema
-and forces every incoming wave to conform to it — casting types, filling
+an out-of-range value slips in. The pipeline pins a single canonical schema
+and forces every incoming wave to conform to it: casting types, filling
 missing columns, and quarantining rows that violate the data contract instead
 of letting them corrupt the output.
 

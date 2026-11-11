@@ -1,16 +1,16 @@
 """Generate synthetic survey-tracker waves.
 
-Writes one CSV per wave into an output folder. The data is entirely synthetic —
-no real respondents, brands, or client content — so the whole pipeline can be
-cloned and run by anyone.
+Writes one CSV per wave into an output folder. The data is entirely synthetic,
+with no real respondents, brands, or client content, so the whole pipeline can
+be cloned and run by anyone.
 
-Two deliberate wrinkles make the pipeline's job realistic:
+Two wrinkles are built in to make the pipeline's job realistic:
 
-* **A legacy first wave** (``--legacy-first``, on by default) uses old column
+* A legacy first wave (``--legacy-first``, on by default) uses old column
   names (``nps`` instead of ``nps_score``) and short region codes
   (``N``/``S``/``E``/``W``). The example config's harmonisation maps fix these,
-  demonstrating the "wave-agnostic" ingest.
-* **Dirty rows** (``--dirty``) injects out-of-range values (nps 99, negative
+  which is how the "wave-agnostic" ingest gets exercised.
+* Dirty rows (``--dirty``) inject out-of-range values (nps 99, negative
   weight, satisfaction 7) so the schema-enforcement / quarantine path has
   something to catch.
 

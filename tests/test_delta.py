@@ -2,7 +2,7 @@
 
 These run only where the Delta JARs are available (CI, a normal laptop). In an
 offline sandbox the ``delta_available`` fixture is False and the whole module
-skips — see tests/conftest.py.
+skips. See tests/conftest.py.
 """
 
 from __future__ import annotations

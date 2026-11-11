@@ -35,7 +35,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         summary = run(spark, config, args.input, args.output,
                       incremental=args.incremental, output_format=args.format)
     if not summary.waves_processed:
-        log.info("Nothing to do — no new waves to process.")
+        log.info("Nothing to do. No new waves to process.")
     else:
         log.info(f"[{summary.mode}] processed waves {summary.waves_processed}")
         log.info(f"  clean rows:   {summary.clean_rows}")

@@ -1,18 +1,17 @@
-"""Transform — respondent-level derived features.
+"""Transform: respondent-level derived features.
 
-Adds the columns the metrics layer needs, demonstrating window functions and
+Adds the columns the metrics layer needs, using window functions and
 conditional logic:
 
-* ``weight_norm`` - the survey weight rescaled so it averages 1.0 *within each
-  wave*. Using a window partitioned by wave means each wave is normalised
-  against its own mean, so waves of different sizes stay comparable. This is a
-  textbook use of a partitioned window aggregate.
-* ``nps_segment`` - promoter / passive / detractor from the NPS score.
-* ``top2box``     - 1 if satisfaction is in the top two box, else 0.
+* ``weight_norm``: the survey weight rescaled so it averages 1.0 within each
+  wave. A window partitioned by wave normalises each wave against its own mean,
+  so waves of different sizes stay comparable.
+* ``nps_segment``: promoter / passive / detractor from the NPS score.
+* ``top2box``: 1 if satisfaction is in the top two box, else 0.
 
-Every feature here is either row-local or computed *within a single wave*, so
+Every feature here is either row-local or computed within a single wave, so
 processing one wave in isolation gives the same answer as processing all of
-them — which is what makes incremental runs safe. Cross-wave calculations
+them. That is what makes incremental runs safe. Cross-wave calculations
 (ranking, wave-over-wave change) live in the aggregate layer instead.
 """
 

@@ -1,7 +1,7 @@
-"""Ingest — read any number of wave files into one clean, canonical frame.
+"""Ingest: read any number of wave files into one clean, canonical frame.
 
 "Wave-agnostic" in practice: the pipeline points at a directory and processes
-*every* wave file it finds, however many there are, with no per-wave code. Each
+every wave file it finds, however many there are, with no per-wave code. Each
 file is harmonised (:mod:`wave_pipeline.harmonise`) and forced to the canonical
 schema (:mod:`wave_pipeline.schema`); the clean rows are unioned and the
 rejected rows are collected separately for a data-quality report.

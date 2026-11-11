@@ -1,8 +1,8 @@
-"""Aggregate — wave-by-segment headline metrics, with wave-over-wave change.
+"""Aggregate: wave-by-segment headline metrics, with wave-over-wave change.
 
 Rolls respondent rows up to one row per (wave, segment), computing weighted
-tracker metrics, then uses a second window — partitioned by segment, ordered by
-wave — to attach the change versus the previous wave (``lag``). That
+tracker metrics, then uses a second window (partitioned by segment, ordered by
+wave) to attach the change versus the previous wave (``lag``). That
 wave-over-wave delta is the number a tracker actually reports ("NPS up 4 points
 since last wave").
 
@@ -62,8 +62,8 @@ def wave_metrics(df: DataFrame, config: PipelineConfig) -> DataFrame:
         F.when(prev_nps.isNotNull(), F.round(F.col("nps") - prev_nps, 1)),
     )
 
-    # Rank segments by NPS within each wave (1 = best). Showcases dense_rank
-    # and answers "which segment leads this wave?".
+    # Rank segments by NPS within each wave (1 = best), using dense_rank.
+    # Answers "which segment leads this wave?".
     if config.segment_cols:
         rank_window = Window.partitionBy("wave").orderBy(F.col("nps").desc_nulls_last())
         agg = agg.withColumn("nps_rank_in_wave", F.dense_rank().over(rank_window))

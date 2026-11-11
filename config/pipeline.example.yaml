@@ -1,8 +1,8 @@
 # Example pipeline configuration.
 #
-# Everything here is optional — an empty file would still run with defaults.
-# The maps below fix the deliberate quirks the synthetic generator introduces
-# in the legacy first wave, demonstrating wave-agnostic ingest.
+# Everything here is optional. An empty file would still run with defaults.
+# The maps below fix the quirks the synthetic generator puts into the legacy
+# first wave, which is what exercises the wave-agnostic ingest.
 
 harmonise:
   # Old column name -> canonical column name.
